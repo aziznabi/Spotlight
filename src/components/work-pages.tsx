@@ -28,6 +28,13 @@ type JobRow = {
   product_id: string;
 };
 type Order = {
+  shipping: { carrier?: string; tracking?: string; shippedAt?: string };
+  lines: {
+    sku: string;
+    quantity: number;
+    productId: string | null;
+    location: string | null;
+  }[];
   id: string;
   name: string;
   channel: string;
@@ -278,6 +285,19 @@ export function Orders() {
                       {o.test ? " · TEST" : ""}
                       {o.cancelled ? " · ANNULÉE" : ""}
                     </small>
+                    {o.lines.map((l) => (
+                      <small key={l.sku}>
+                        {l.productId ? (
+                          <Link href={`/erp/inventaire/${l.productId}`}>
+                            {l.sku}
+                          </Link>
+                        ) : (
+                          l.sku
+                        )}{" "}
+                        · {l.quantity} pièce ·{" "}
+                        {l.location || "Emplacement à préciser"}
+                      </small>
+                    ))}
                   </td>
                   <td>{o.channel}</td>
                   <td>
@@ -285,6 +305,53 @@ export function Orders() {
                   </td>
                   <td>
                     <Badge value={o.fulfillment_status} />
+                    {o.shipping.shippedAt && (
+                      <p className="small">
+                        {o.shipping.carrier} · {o.shipping.tracking}
+                        <br />
+                        {date(o.shipping.shippedAt)}
+                      </p>
+                    )}
+                    {o.channel !== "shopify" &&
+                      o.fulfillment_status !== "fulfilled" &&
+                      !o.cancelled &&
+                      o.financial_status === "paid" && (
+                        <details>
+                          <summary>Confirmer l’expédition</summary>
+                          <form
+                            onSubmit={async (e) => {
+                              e.preventDefault();
+                              const f = new FormData(e.currentTarget);
+                              try {
+                                await api(
+                                  `orders/${encodeURIComponent(o.id)}/shipment`,
+                                  "POST",
+                                  {
+                                    carrier: f.get("carrier"),
+                                    tracking: f.get("tracking"),
+                                  },
+                                );
+                                setNotice("Expédition enregistrée.");
+                                await refresh();
+                              } catch (e) {
+                                setNotice((e as Error).message);
+                              }
+                            }}
+                          >
+                            <label>
+                              Transporteur
+                              <input name="carrier" required maxLength={120} />
+                            </label>
+                            <label>
+                              Référence de suivi
+                              <input name="tracking" required maxLength={200} />
+                            </label>
+                            <button className="secondary">
+                              Confirmer l’envoi
+                            </button>
+                          </form>
+                        </details>
+                      )}
                   </td>
                   <td>{money(o.total_minor, o.currency)}</td>
                 </tr>

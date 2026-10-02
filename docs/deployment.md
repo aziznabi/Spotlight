@@ -3,7 +3,7 @@
 ## Accès vérifiés le 2 octobre 2026
 
 - GitHub : dépôt `aziznabi/Spotlight`, lecture et branche de travail `codex/spotlight-v1`. Aucun push direct sur main.
-- Neon MCP : projet Spotlight `aged-meadow-46817444`; branche dev créée `br-little-pine-b2rs2s22` (`dev-spotlight-v1`), base neondb. Migrations 001 et 002 appliquées et colonnes lues sur **dev uniquement**. Aucune modification de production `br-withered-heart-b2wo6xy6`.
+- Neon MCP : projet Spotlight `aged-meadow-46817444`; branche dev créée `br-little-pine-b2rs2s22` (`dev-spotlight-v1`), base neondb. Migrations 001, 002 et 003 appliquées et schéma lu sur **dev uniquement**. Aucune modification de production `br-withered-heart-b2wo6xy6`.
 - Shopify MCP : lecture boutique d’essai `kaizjm-da.myshopify.com`, EUR; emplacement `gid://shopify/Location/124917743947`. Confirmation de la boutique cible et sélection du canal Headless nécessaires avant publication.
 - Vercel MCP : équipe `team_rLcX7bBvmkVSxeTiL1vUSLfX` lisible; aucun projet Spotlight initial. L’outil de déploiement a retourné « Tool deploy_to_vercel not found ». Pas de token CLI injecté, pas de preview créée.
 - Cloud : aucun secret/variable applicatif injecté. Réseau sortant limité au preset package_managers, sans domaines API métier autorisés. Le fichier local de démonstration ne contient que des identifiants PostgreSQL locaux jetables, pas des credentials cloud.

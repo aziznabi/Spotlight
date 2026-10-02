@@ -143,6 +143,44 @@ test("create/edit SKU, immutable upload, durable Studio job, approval and export
     path: `.local/studio-${testInfo.project.name}.png`,
     fullPage: true,
   });
+  await page.getByRole("tab", { name: "Fiche", exact: true }).click();
+  await page
+    .getByRole("combobox", { name: "Contrôle", exact: true })
+    .selectOption("reviewed");
+  await page
+    .getByLabel("Observations", { exact: true })
+    .fill("Contrôle humain synthétique pour test, aucune certification.");
+  await page.getByRole("button", { name: "Enregistrer le contrôle" }).click();
+  await expect
+    .poll(
+      async () =>
+        (await (await page.request.get(`/api/erp/products/${id}`)).json())
+          .product.authenticity.status,
+    )
+    .toBe("reviewed");
+  await page.getByRole("tab", { name: "Listings", exact: true }).click();
+  await page.getByRole("button", { name: "Valider la pièce (admin)" }).click();
+  await expect(page.getByText("Pièce validée pour publication.")).toBeVisible();
+  await page.getByRole("button", { name: "Publier sur Shopify" }).click();
+  await expect(
+    page.getByText("Démonstration : publication Shopify interdite."),
+  ).toBeVisible();
+  await page.getByRole("tab", { name: "Studio", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Supprimer la variante" }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "Rejeter", exact: true }).click();
+  await page.getByRole("button", { name: "Supprimer la variante" }).click();
+  await expect(
+    page.getByText("Variante supprimée de la galerie."),
+  ).toBeVisible();
+  const archived = await (
+    await page.request.get(`/api/erp/products/${id}`)
+  ).json();
+  expect(archived.assets.map((asset: { id: string }) => asset.id)).toEqual([
+    a.id,
+  ]);
+  expect(archived.product.preparation).toBe("draft");
   await page.getByRole("tab", { name: "Marché & prix" }).click();
   await page.getByRole("button", { name: "Analyser le marché" }).click();
   await expect
@@ -197,6 +235,17 @@ test("external sale creates withdrawal and blocked integrations are explicit", a
     await page.request.get(`/api/erp/products/${p.id}`)
   ).json();
   expect(detail.product.stock).toBe("sold");
+  await page.goto("/erp/commandes");
+  const orderRow = page.getByRole("row").filter({ hasText: p.sku });
+  await orderRow.getByText("Confirmer l’expédition").click();
+  await orderRow.getByLabel("Transporteur").fill("Transport test");
+  await orderRow.getByLabel("Référence de suivi").fill("SYNTHETIC-TRACKING");
+  await orderRow.getByRole("button", { name: "Confirmer l’envoi" }).click();
+  await expect(orderRow.getByText("Expédié", { exact: true })).toBeVisible();
+  await page.screenshot({
+    path: `.local/orders-${test.info().project.name}.png`,
+    fullPage: true,
+  });
   await page.goto("/erp/reglages");
   await expect(page.getByText("À configurer").first()).toBeVisible();
 });

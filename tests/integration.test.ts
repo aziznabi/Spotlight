@@ -11,9 +11,16 @@ import {
   externalSale,
   completeTask,
   type IncomingOrder,
+  shipExternalOrder,
 } from "@/modules/commerce/orders";
-import { saveAsset, compose, validateImage } from "@/modules/studio/engine";
+import {
+  saveAsset,
+  compose,
+  validateImage,
+  processImage,
+} from "@/modules/studio/engine";
 import { readPrivate } from "@/modules/studio/storage";
+import { archiveVariant } from "@/modules/studio/archive";
 import { enqueue, claim, execute, recover } from "@/modules/jobs/service";
 import { type User } from "@/modules/auth/server";
 import { publishProduct } from "@/modules/commerce/publish";
@@ -85,6 +92,137 @@ function order(sku: string, id = randomUUID()): IncomingOrder {
   };
 }
 describe("PostgreSQL integration, no external API proof", () => {
+  it("preserves a mocked marketing scene as marketing and applies the Ad format without cropping", async () => {
+    const p = await piece(),
+      bytes = await sharp({
+        create: { width: 320, height: 240, channels: 4, background: "#bbaa99" },
+      })
+        .png()
+        .toBuffer();
+    const source = await saveAsset(p.id, bytes, "original", null);
+    const provider = {
+      name: "synthetic-test-provider",
+      capabilities: () => ({
+        composition: true,
+        backgroundRemoval: true,
+        marketingScene: true,
+      }),
+      scene: async () => bytes,
+      removeBackground: async () => bytes,
+    };
+    const out = await processImage(
+      source,
+      {
+        assetIds: [source.id],
+        preset: "Ad",
+        format: "9:16",
+        background: "#fffFFF",
+        margin: 0.2,
+        shadow: false,
+        removeBackground: false,
+      },
+      randomUUID(),
+      provider,
+    );
+    expect(out.kind).toBe("marketing");
+    expect(out.width).toBe(900);
+    expect(out.height).toBe(1600);
+    expect(out.source_id).toBe(source.id);
+    expect(out.review).toBe("pending");
+    await expect(
+      processImage(
+        out,
+        {
+          assetIds: [out.id],
+          preset: "Clean",
+          format: "1:1",
+          background: "#ffffff",
+          margin: 0.1,
+          shadow: false,
+          removeBackground: false,
+        },
+        randomUUID(),
+        provider,
+      ),
+    ).rejects.toThrow("original documentaire");
+  });
+  it("archives only an unused variant and preserves immutable originals", async () => {
+    const p = await piece(),
+      bytes = await sharp({
+        create: { width: 100, height: 100, channels: 4, background: "#fff" },
+      })
+        .png()
+        .toBuffer();
+    const original = await saveAsset(p.id, bytes, "original", null),
+      variant = await saveAsset(p.id, bytes, "variant", original.id);
+    await expect(archiveVariant(original.id, user.id)).rejects.toThrow(
+      "originaux",
+    );
+    await query(
+      "UPDATE assets SET selected=true,review='approved' WHERE id=$1",
+      [variant.id],
+    );
+    await expect(archiveVariant(variant.id, user.id)).rejects.toThrow(
+      "sélectionnée",
+    );
+    await query(
+      "UPDATE assets SET selected=false,public_url='https://fixture.invalid/published' WHERE id=$1",
+      [variant.id],
+    );
+    await expect(archiveVariant(variant.id, user.id)).rejects.toThrow(
+      "publiée",
+    );
+    await query("UPDATE assets SET public_url=null WHERE id=$1", [variant.id]);
+    await archiveVariant(variant.id, user.id);
+    await archiveVariant(variant.id, user.id);
+    expect(
+      (
+        await query(
+          "SELECT * FROM assets WHERE product_id=$1 AND deleted_at IS NULL",
+          [p.id],
+        )
+      ).map((a) => a.id),
+    ).toEqual([original.id]);
+    expect(await readPrivate(original.storage_key)).toEqual(bytes);
+  });
+  it("records external shipment once without changing stock and keeps Shopify authoritative", async () => {
+    const p = await piece(),
+      sale = await externalSale(p.id, "vinted", 4200, user.id);
+    await shipExternalOrder(
+      sale.id,
+      { carrier: "Test carrier", tracking: "SYNTHETIC-001" },
+      user.id,
+    );
+    expect(
+      (
+        await shipExternalOrder(
+          sale.id,
+          { carrier: "Test carrier", tracking: "SYNTHETIC-001" },
+          user.id,
+        )
+      ).alreadyShipped,
+    ).toBe(true);
+    expect(
+      (
+        await query("SELECT fulfillment_status FROM orders WHERE id=$1", [
+          sale.id,
+        ])
+      )[0].fulfillment_status,
+    ).toBe("fulfilled");
+    expect(
+      (await query("SELECT stock FROM products WHERE id=$1", [p.id]))[0].stock,
+    ).toBe("sold");
+    const p2 = await piece(),
+      o = order(p2.sku);
+    await applyOrder(o);
+    await expect(
+      shipExternalOrder(
+        o.id,
+        { carrier: "Test", tracking: "fixture" },
+        user.id,
+      ),
+    ).rejects.toThrow("Shopify Admin");
+  });
   it("accepts a signed synthetic webhook, applies discounts, deduplicates, and rejects tampering", async () => {
     const p = await piece();
     process.env.SHOPIFY_WEBHOOK_SECRET = "fixture-hmac-secret";

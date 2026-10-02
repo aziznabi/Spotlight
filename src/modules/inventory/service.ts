@@ -7,7 +7,7 @@ import { capabilities } from "@/modules/studio/presets";
 import { margin } from "@/modules/pricing/margin";
 export async function products(search = "", stock = "", stage = "") {
   return query<Product>(
-    "SELECT p.*, (SELECT id FROM assets WHERE product_id=p.id ORDER BY selected DESC,position,id LIMIT 1) AS thumbnail_id FROM products p WHERE ($1='' OR p.title ILIKE '%'||$1||'%' OR p.sku ILIKE '%'||$1||'%' OR p.brand ILIKE '%'||$1||'%') AND ($2='' OR p.stock=$2) AND ($3='' OR p.preparation=$3) ORDER BY p.created_at DESC LIMIT 200",
+    "SELECT p.*, (SELECT id FROM assets WHERE product_id=p.id AND deleted_at IS NULL ORDER BY selected DESC,position,id LIMIT 1) AS thumbnail_id FROM products p WHERE ($1='' OR p.title ILIKE '%'||$1||'%' OR p.sku ILIKE '%'||$1||'%' OR p.brand ILIKE '%'||$1||'%') AND ($2='' OR p.stock=$2) AND ($3='' OR p.preparation=$3) ORDER BY p.created_at DESC LIMIT 200",
     [search.slice(0, 100), stock, stage],
   );
 }
@@ -19,7 +19,7 @@ export async function detail(id: string) {
   const [assets, costs, benchmarks, listings, jobs, audit, suggestions] =
     await Promise.all([
       query<Asset>(
-        "SELECT * FROM assets WHERE product_id=$1 ORDER BY position,created_at",
+        "SELECT * FROM assets WHERE product_id=$1 AND deleted_at IS NULL ORDER BY position,created_at",
         [id],
       ),
       query("SELECT * FROM costs WHERE product_id=$1 ORDER BY created_at", [

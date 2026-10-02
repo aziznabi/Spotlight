@@ -144,6 +144,7 @@ export async function processImage(
   asset: Asset,
   input: StudioInput,
   jobId?: string,
+  provider: ImageProvider = photoroom,
 ) {
   const preset = presets[input.preset];
   if (asset.kind !== "original")
@@ -153,10 +154,13 @@ export async function processImage(
     );
   const source = await readPrivate(asset.storage_key);
   let bytes: Buffer = source;
-  if (preset.marketing) bytes = await photoroom.scene(source);
+  if (preset.marketing)
+    bytes = await compose(await provider.scene(source), {
+      ...input,
+      shadow: false,
+    });
   else {
-    if (input.removeBackground)
-      bytes = await photoroom.removeBackground(source);
+    if (input.removeBackground) bytes = await provider.removeBackground(source);
     bytes = await compose(bytes, input);
   }
   return saveAsset(
@@ -170,7 +174,7 @@ export async function processImage(
       presetVersion: preset.version,
       prompt: preset.marketing ? scenePrompt : null,
       provider:
-        input.removeBackground || preset.marketing ? "photoroom" : "sharp",
+        input.removeBackground || preset.marketing ? provider.name : "sharp",
       model: preset.marketing
         ? "edit-v2"
         : input.removeBackground

@@ -10,6 +10,7 @@ import {
   overview,
 } from "@/modules/inventory/service";
 import { saveAsset } from "@/modules/studio/engine";
+import { archiveVariant } from "@/modules/studio/archive";
 import { studioInput, capabilities } from "@/modules/studio/presets";
 import { enqueue } from "@/modules/jobs/service";
 import { dispatch, dispatchPending } from "@/modules/jobs/dispatch";
@@ -17,6 +18,7 @@ import {
   completeTask,
   externalSale,
   listOrders,
+  shipExternalOrder,
 } from "@/modules/commerce/orders";
 import { type Product, type Job } from "@/modules/inventory/types";
 import { canonicalUrl } from "@/modules/pricing/engine";
@@ -278,6 +280,22 @@ async function handle(req: Request, ctx: Context) {
         return Response.json(job, { status: 202 });
       }
     }
+    if (section === "assets" && id && req.method === "DELETE")
+      return Response.json(await archiveVariant(id, user.id));
+    if (
+      section === "orders" &&
+      id &&
+      action === "shipment" &&
+      req.method === "POST"
+    ) {
+      const input = z
+        .object({
+          carrier: z.string().trim().min(2).max(120),
+          tracking: z.string().trim().min(2).max(200),
+        })
+        .parse(await req.json());
+      return Response.json(await shipExternalOrder(id, input, user.id));
+    }
     if (section === "assets" && id && req.method === "PATCH") {
       const b = z
         .object({
@@ -299,9 +317,10 @@ async function handle(req: Request, ctx: Context) {
           ]);
           const {
             rows: [a],
-          } = await c.query("SELECT * FROM assets WHERE id=$1 FOR UPDATE", [
-            id,
-          ]);
+          } = await c.query(
+            "SELECT * FROM assets WHERE id=$1 AND deleted_at IS NULL FOR UPDATE",
+            [id],
+          );
           if (!a) throw new AppError("Image absente", 404);
           if (a.public_url && b.review !== "approved")
             throw new AppError(
@@ -434,3 +453,4 @@ export const GET = handle;
 export const POST = handle;
 export const PUT = handle;
 export const PATCH = handle;
+export const DELETE = handle;

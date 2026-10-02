@@ -7,11 +7,11 @@
 | Installation npm, versions exactes et lockfile | Réussie dans le cloud Node 24.19.0; .nvmrc fixé |
 | ESLint | Réussi; sources Workflow générées exclues du lint |
 | TypeScript strict | Réussi |
-| Tests unitaires/intégration | **40 / 40**, 4 fichiers, dernier run 1,88 s |
+| Tests unitaires/intégration | **43 / 43**, 4 fichiers, dernier run 1,99 s; archivage, expédition externe et contrat de scène marketing inclus |
 | Build Next.js production | Réussi; 20 étapes compilées dont dépendances, **1 workflow applicatif** détecté |
-| E2E Chromium desktop/mobile sur `next start` | **10 / 10**, 28,3 s; serveur local de production, pas seulement dev |
+| E2E Chromium desktop/mobile sur `next start` | **10 / 10**; serveur local de production, pas seulement dev; parcours enrichis de suppression et d’expédition |
 | PostgreSQL local | Vraie base PostgreSQL 18; base dédiée jetable par suite d’intégration, migrations exécutées |
-| Neon dev | Migrations 001/002 appliquées via MCP, colonnes relues; production intacte |
+| Neon dev | Migrations 001/002/003 appliquées via MCP, schéma relu; production intacte |
 | GraphQL Shopify | Opérations Admin et Storefront validées contre le schéma officiel; lecture boutique réelle via MCP |
 | Inspection UI | Captures ordinateur/mobile inventaire, Studio et boutique vide examinées |
 | Publication/checkout/paiement réels | **Non exécutés : tokens applicatifs manquants** |
@@ -30,7 +30,7 @@ Durées ci-dessus = environnement de vérification, pas benchmark de performance
 - Webhook synthétique signé passant par la vraie route HTTP/SQL; remises de ligne prises en compte; ID dédupliqué. Pas une livraison distante Shopify.
 - Publication avec double réseau : réponse perdue, récupération de la variante, une seule activation, refus de réinitialiser un stock Shopify devenu nul. Aucun appel réel Admin d’écriture.
 - Panier avec double réseau : création quantité 1, secret panier uniquement en cookie HttpOnly, ligne existante non ajoutée deux fois, retrait, refus hors collection et lien checkout retourné. Aucune commande réelle ni page de paiement validée.
-- E2E : authentification privée, permission opérateur, création/édition, import photo, job durable exécuté hors réponse HTTP, avant/après, validation/export, échec pricing sans clé au lieu de comparables fictifs, vente externe/retraits, états publics vides et absence de débordement viewport.
+- E2E : authentification privée, permission opérateur, création/édition, import photo, job durable exécuté hors réponse HTTP, avant/après, validation/export, suppression logique de variante avec conservation d’original, échec pricing sans clé au lieu de comparables fictifs, vente externe/retraits/expédition, états publics vides et absence de débordement viewport.
 
 ## Inspection et corrections
 
@@ -38,10 +38,10 @@ Fond neutre, accent olive, typographie système, listes/inventaire, contrôles m
 
 Corrections issues des tests : conflit de type SQL dans la vente externe; détection du workflow (directives sur lignes dédiées et formatage conservé); reprise Shopify après réponse perdue; verrouillage cohérent produit/image/listing; devise TND; ID de ligne normalisé entre webhook et rapprochement; remises; cache benchmark limité au produit; rejet d’un original marketing comme source documentaire; filtrage de la collection et éligibilité panier.
 
-Captures locales reproductibles par E2E : `.local/inventory-desktop.png`, `inventory-mobile.png`, `studio-desktop.png`, `studio-mobile.png`, `store-desktop.png`, `store-mobile.png`. Non committées; la CI les conserve en artefacts 7 jours. Les tests utilisent des images plates synthétiques pour les invariants, pas des photos prétendument commerciales. Le navigateur interactif complète l’inspection.
+Captures locales reproductibles par E2E : `.local/inventory-desktop.png`, `inventory-mobile.png`, `studio-desktop.png`, `studio-mobile.png`, `store-desktop.png`, `store-mobile.png`, `orders-desktop.png`, `orders-mobile.png`. Non committées; la CI les conserve en artefacts 7 jours. Les tests utilisent des images plates synthétiques pour les invariants, pas des photos prétendument commerciales. Le navigateur interactif complète l’inspection. L’expédition et la suppression ont été inspectées; un export HTTP DELETE manquant, détecté par E2E, a été corrigé avant la relance réussie.
 
 ## Limites et suite obligatoire
 
 Ce rapport ne vaut ni audit sécurité exhaustif, ni certification WCAG, ni preuve de fidélité d’un fournisseur IA. Aucune comparaison OpenAI/Gemini/PhotoRoom/Bria/fal sur pièces réelles. Le choix fournisseur reste provisoire. Il faut fournir/configurer les accès de deployment.md puis exécuter le parcours complet sur une boutique test autorisée. Les critères non satisfaits restent visibles dans acceptance.md et backlog.md; ne pas ouvrir la vente publique avant leur résolution.
 
-La CI GitHub est fournie dans `.github/workflows/verify.yml`. Son résultat distant doit être lu après le push; la présence du fichier n’est pas une preuve d’exécution distante.
+La CI GitHub est fournie dans `.github/workflows/verify.yml`. [Exécution réelle 36987891652](https://github.com/aziznabi/Spotlight/actions/runs/36987891652) réussie sur d41f2c2 : installation, lint/typage/tests/build, migrations/seed, Chromium, E2E et artefacts. Le résultat de chaque nouvelle révision doit être contrôlé après push; cette preuve initiale n’est pas une validation automatique des changements ultérieurs.

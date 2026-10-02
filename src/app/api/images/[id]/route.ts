@@ -10,9 +10,10 @@ export async function GET(
     await requireUser();
     const { id } = await params;
     if (!/^[0-9a-f-]{36}$/.test(id)) throw new AppError("Image invalide", 400);
-    const [a] = await query("SELECT storage_key,mime FROM assets WHERE id=$1", [
-      id,
-    ]);
+    const [a] = await query(
+      "SELECT storage_key,mime FROM assets WHERE id=$1 AND deleted_at IS NULL",
+      [id],
+    );
     if (!a) throw new AppError("Image introuvable", 404);
     return new Response(new Uint8Array(await readPrivate(a.storage_key)), {
       headers: {

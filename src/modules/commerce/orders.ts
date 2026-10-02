@@ -257,5 +257,50 @@ export async function completeTask(id: string, actor: string) {
   });
 }
 export async function listOrders() {
-  return query("SELECT * FROM orders ORDER BY created_at DESC LIMIT 100");
+  return query(
+    "SELECT o.*,coalesce((SELECT json_agg(json_build_object('sku',l.sku,'quantity',l.quantity,'productId',l.product_id,'location',p.location)) FROM order_lines l LEFT JOIN products p ON p.id=l.product_id WHERE l.order_id=o.id),'[]') AS lines FROM orders o ORDER BY created_at DESC LIMIT 100",
+  );
+}
+export async function shipExternalOrder(
+  id: string,
+  shipping: { carrier: string; tracking: string },
+  actorId: string,
+) {
+  return transaction(async (c) => {
+    const {
+      rows: [o],
+    } = await c.query("SELECT * FROM orders WHERE id=$1 FOR UPDATE", [id]);
+    if (!o) throw new AppError("Commande absente", 404);
+    if (o.channel === "shopify")
+      throw new AppError(
+        "Les expéditions Shopify se valident dans Shopify Admin.",
+        409,
+      );
+    if (o.cancelled || o.financial_status !== "paid")
+      throw new AppError("Commande non expédiable", 409);
+    if (o.fulfillment_status === "fulfilled")
+      return { ok: true, alreadyShipped: true };
+    const { rows: pieces } = await c.query(
+      "SELECT p.stock,p.stock_order_id FROM products p JOIN order_lines l ON l.product_id=p.id WHERE l.order_id=$1 FOR UPDATE OF p",
+      [id],
+    );
+    if (
+      !pieces.length ||
+      pieces.some((p) => p.stock !== "sold" || p.stock_order_id !== id)
+    )
+      throw new AppError(
+        "Conflit de disponibilité : vérifier les pièces avant expédition.",
+        409,
+      );
+    const record = { ...shipping, shippedAt: new Date().toISOString() };
+    await c.query(
+      "UPDATE orders SET fulfillment_status='fulfilled',shipping=$2 WHERE id=$1",
+      [id, record],
+    );
+    await c.query(
+      "INSERT INTO audit(actor_id,product_id,event,details) SELECT $1,product_id,'order.shipped',$2 FROM order_lines WHERE order_id=$3",
+      [actorId, { orderId: id, ...record }, id],
+    );
+    return { ok: true };
+  });
 }

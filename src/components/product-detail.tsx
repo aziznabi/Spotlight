@@ -283,6 +283,12 @@ export function ProductDetail({ id }: { id: string }) {
       {tab === "Studio" && (
         <Studio
           capabilities={data.capabilities}
+          onDelete={(a) =>
+            act(
+              () => api(`assets/${a.id}`, "DELETE", {}),
+              "Variante supprimée de la galerie. Original conservé.",
+            )
+          }
           assets={data.assets}
           busy={busy}
           onJob={(input) => job("studio", input)}
@@ -753,6 +759,7 @@ function PricingResult({
 }
 function Studio({
   capabilities,
+  onDelete,
   assets,
   busy,
   onJob,
@@ -760,6 +767,7 @@ function Studio({
   onReview,
 }: {
   capabilities: Detail["capabilities"];
+  onDelete: (a: Asset) => void;
   assets: Asset[];
   busy: boolean;
   onJob: (input: StudioInput) => void;
@@ -1019,6 +1027,14 @@ function Studio({
                 >
                   <X size={15} />
                   Rejeter
+                </button>
+                <button
+                  type="button"
+                  className="text-button danger"
+                  disabled={busy || a.selected || !!a.public_url}
+                  onClick={() => onDelete(a)}
+                >
+                  Supprimer la variante
                 </button>
               </div>
             </div>

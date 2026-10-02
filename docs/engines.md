@@ -30,13 +30,13 @@ Snapshots immuables, version, paramètres, requêtes, usage fournisseur, latence
 | Marketplace | 4:5 | gris clair | 10 % | non | idem |
 | Luxury | 4:5 | noir | 16 % | oui | idem |
 | Lifestyle | 4:5 | scène marketing | — | fournisseur | PhotoRoom Edit |
-| Ad | 9:16 prévu | scène marketing | — | fournisseur | PhotoRoom Edit; paramètres de rendu à valider en essai |
+| Ad | 9:16 | scène marketing encadrée | 20 % | fournisseur | PhotoRoom Edit; rendu à valider en essai |
 
 Sharp redimensionne en `fit:inside`, conserve les proportions, centre et compose sans couper le produit; ombre elliptique simple. Sans détourage, le fond présent dans le fichier source reste visible dans le cadre : ce n’est pas une suppression de fond. Originaux immuables, chaque sortie a source/paramètres/job/provider/modèle/prompt et validation. Le Studio ne transforme que les originaux, pour empêcher de recycler une scène marketing en photo documentaire. Images max 4 Mo / 24 Mpx, JPEG/PNG/WebP statiques.
 
-PhotoRoom segment et Edit sont des adaptateurs provisoires, non essayés réellement. Les presets marketing sont désactivés sans accès Edit explicitement confirmé. Les réglages avancés de composition déterministe ne sont pas appliqués à la scène générée; ne pas prétendre que tous les presets sont entièrement disponibles. Avant activation : vérifier le contrat courant des endpoints et les droits de la clé puis tester fidélité, formats, latence et coût. Aucun tarif fixe n’est déduit d’une synthèse.
+PhotoRoom segment et Edit sont des adaptateurs provisoires, non essayés réellement. Les presets marketing sont désactivés sans accès Edit explicitement confirmé. La scène retournée est cadrée sans recadrage destructif dans le format/marge/fond choisi; on n’ajoute pas une seconde ombre à celle du fournisseur. Le contrat de composition Ad 9:16 est vérifié avec un double réseau synthétique, ce qui ne valide pas une scène PhotoRoom réelle. Avant activation : vérifier le contrat courant des endpoints et les droits de la clé puis tester fidélité, formats, latence et coût. Aucun tarif fixe n’est déduit d’une synthèse.
 
-Originaux privés Blob, jamais écrasés. Les variantes marketing sont distinctes; elles ne constituent pas une preuve d’état et ne remplacent pas les vues documentaires, étiquettes et défauts. Aucun angle absent ne doit être généré. Toutes les images exigent une approbation humaine avant sélection/publication. Rejet disponible; suppression physique et purge avec dépendances reportées, aucun original supprimé implicitement.
+Originaux privés Blob, jamais écrasés. Les variantes marketing sont distinctes; elles ne constituent pas une preuve d’état et ne remplacent pas les vues documentaires, étiquettes et défauts. Aucun angle absent ne doit être généré. Toutes les images exigent une approbation humaine avant sélection/publication. Rejet et suppression logique des variantes inutilisées disponibles; images sélectionnées/publiées et dépendances actives bloquent la suppression. La galerie et le proxy excluent les variantes supprimées. Objets et filiation conservés pour audit, purge physique à définir; aucun original supprimé implicitement.
 
 ## Marges
 
