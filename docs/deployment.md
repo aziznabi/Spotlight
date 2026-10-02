@@ -1,0 +1,58 @@
+# Déploiement et connexions à terminer
+
+## Accès vérifiés le 2 octobre 2026
+
+- GitHub : dépôt `aziznabi/Spotlight`, lecture et branche de travail `codex/spotlight-v1`. Aucun push direct sur main.
+- Neon MCP : projet Spotlight `aged-meadow-46817444`; branche dev créée `br-little-pine-b2rs2s22` (`dev-spotlight-v1`), base neondb. Migrations 001 et 002 appliquées et colonnes lues sur **dev uniquement**. Aucune modification de production `br-withered-heart-b2wo6xy6`.
+- Shopify MCP : lecture boutique d’essai `kaizjm-da.myshopify.com`, EUR; emplacement `gid://shopify/Location/124917743947`. Confirmation de la boutique cible et sélection du canal Headless nécessaires avant publication.
+- Vercel MCP : équipe `team_rLcX7bBvmkVSxeTiL1vUSLfX` lisible; aucun projet Spotlight initial. L’outil de déploiement a retourné « Tool deploy_to_vercel not found ». Pas de token CLI injecté, pas de preview créée.
+- Cloud : aucun secret/variable applicatif injecté. Réseau sortant limité au preset package_managers, sans domaines API métier autorisés. Le fichier local de démonstration ne contient que des identifiants PostgreSQL locaux jetables, pas des credentials cloud.
+
+Ces lectures MCP ne donnent **aucun droit d’exécution à l’application déployée**. Ne pas copier de credentials dans Git, une issue ou la conversation.
+
+## Variables serveur requises
+
+| Service | Configuration | Où l’obtenir / condition |
+| --- | --- | --- |
+| Neon | DATABASE_URL, DATABASE_ENV=development | Connection string de la branche **dev**, TLS; rôle applicatif dédié conseillé |
+| Site | APP_URL, SESSION_COOKIE_SECURE=true | URL exacte de la preview pour vérification Origin; jamais localhost en ligne |
+| Équipe | ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_ROLE | Créer via `npm run user:create`, retirer ensuite le mot de passe du runtime |
+| Shopify ERP | SHOPIFY_SHOP_DOMAIN, SHOPIFY_ADMIN_ACCESS_TOKEN, SHOPIFY_API_VERSION=2026-10 | Application personnalisée installée sur la boutique cible |
+| Shopify canaux | SHOPIFY_LOCATION_ID, SHOPIFY_PUBLICATION_ID | Emplacement de stock et publication Headless correspondant au token Storefront |
+| Shopify boutique | SHOPIFY_STOREFRONT_ACCESS_TOKEN | **Token privé Storefront**, conservé côté serveur; pas de NEXT_PUBLIC |
+| Webhooks | SHOPIFY_WEBHOOK_SECRET | Secret utilisé pour signer les notifications de cette application Shopify |
+| Pricing + propositions IA | OPENAI_API_KEY, OPENAI_MODEL | Compte/projet autorisé à Responses et web_search; plafond de dépenses configuré |
+| Studio | PHOTOROOM_API_KEY; PHOTOROOM_EDIT_ENABLED | Clé/API et droits segment/Edit vérifiés; ne pas activer Edit avant les essais |
+| Stockage | BLOB_READ_WRITE_TOKEN, BLOB_PUBLIC_READ_WRITE_TOKEN, STORAGE_DRIVER=blob | Deux stores distincts privé/public liés à Vercel; pas de disque temporaire |
+| Jobs/cron | CRON_SECRET, JOBS_MAX_CONCURRENCY | Secret fort; concurrence 2 par défaut, bornée à 4 |
+
+`.env.example` liste aussi le cache et les variables locales. `DEMO_SEED=false` sur toute preview connectée; le seed refuse un hôte non local. Aucun abonnement ni store facturable ne doit être créé sans validation du plan disponible.
+
+## Procédure Vercel
+
+1. Importer le dépôt GitHub, framework Next.js, racine du dépôt, Node 22+, build `npm run build`. Déploiements preview sur branche codex, pas de promotion production automatique.
+2. Lier Neon dev et les stores Blob, renseigner les secrets **Preview** uniquement. Interdire le mélange de branche Neon production et preview. Vérifier quotas/prix Workflow/Blob avant activation.
+3. Autoriser dans le cloud les hôtes strictement nécessaires : host Neon dev, api.vercel.com si CLI, api.openai.com, sdk.photoroom.com, image-api.photoroom.com, boutique Shopify et domaines Blob pertinents. Le réseau de Vercel est distinct de celui du poste d’exécution.
+4. Appliquer `npm run db:migrate` à dev, pas `db push`; créer le premier administrateur. Le code Workflow utilise `withWorkflow`; Vercel fournit son infrastructure durable. Ne pas servir les routes `.well-known/workflow` via un proxy qui retire les signatures.
+5. Déployer une preview, fixer APP_URL à cette URL (ou domaine preview stable), redéployer si nécessaire. Vercel doit pouvoir délivrer ses jobs; vérifier les interactions avec Deployment Protection dans ce projet.
+6. Vérifier connexion privée, upload Blob privé (URL anonyme refusée), composition Studio, reprise durable, export et logs. Ajouter ensuite les clés payantes dans la limite de budget autorisée.
+
+## Shopify : installation et essai complet
+
+Scopes de base à vérifier selon l’app installée : read/write_products, read/write_inventory, read_locations, read/write_publications, read_orders. Les opérations GraphQL sont validées contre le schéma officiel courant; les autorisations de la boutique doivent encore être vérifiées réellement. Le connecteur peut annoncer des scopes alternatifs marketplace/quick_sale qui ne sont pas requis pour une commande standard.
+
+Storefront privé : lecture catalogue/listings, lecture/écriture checkouts selon configuration Headless. Ne pas confondre token Admin et Storefront. Le produit doit être publié sur le canal associé à ce token.
+
+Notifications sur `/api/webhooks/shopify` : orders/create, orders/updated, orders/paid, orders/cancelled, orders/fulfilled. HMAC corps brut + domaine boutique + ID événement. La commande engage la pièce dès sa création, sans attendre le paiement. Les updates financières couvrent les remboursements; ni remboursement ni annulation ne réassortent. Une panne renvoie 500 pour livraison Shopify ultérieure. Cron quotidien 05:00 UTC : relance pending et rapprochement des commandes mises à jour sur 7 jours; commande manuelle disponible. Limite explicite 500 commandes / 100 lignes; alerte d’échec si dépassée, pas de succès partiel silencieux.
+
+Essai à autoriser/configurer : une vraie pièce de test explicitement autorisée (pas un produit DEMO), images privées approuvées, publication sur boutique test, catalogue et recherche, panier, redirection checkout, paiement en **mode test** Shopify, webhook reçu dans ERP, pièce engagée puis vendue, annonce externe à retirer. Répéter webhook, annulation, retard et rapprochement. Vérifier quantité 1, overselling désactivé, frais/livraison/taxes du checkout. Ne jamais effectuer une commande réelle payante pour vérifier.
+
+## Sources officielles utilisées
+
+- Documentation Next.js fournie avec le package installé : `node_modules/next/dist/docs/` (App Router, API routes, sécurité serveur/client).
+- Documentation Workflow installée : `node_modules/workflow/docs/` (Next.js, étapes, idempotence et erreurs), [Workflow](https://useworkflow.dev/).
+- [Shopify Admin GraphQL 2026-10](https://shopify.dev/docs/api/admin-graphql/2026-10) et [Storefront GraphQL](https://shopify.dev/docs/api/storefront/2026-10), recherches documentaires et validation de chaque opération via outils Shopify officiels. Les scripts de skill distants n’étaient pas présents dans le workspace : validation via connecteur en remplacement.
+- [Neon serverless / PostgreSQL](https://neon.com/docs), guide Neon de la session et lectures du projet.
+- [Vercel Blob](https://vercel.com/docs/vercel-blob), documentation get/put privé/public via connecteur; APIs installées typées.
+- [OpenAI Responses](https://platform.openai.com/docs/api-reference/responses), README officiel du SDK OpenAI consulté. Appel réel bloqué par clé/réseau.
+- [PhotoRoom API](https://docs.photoroom.com/) : accès documentaire direct refusé par réseau cloud. Adaptateur **provisoire à confirmer**, pas choix issu d’un benchmark ni contrat d’API certifié testé.
