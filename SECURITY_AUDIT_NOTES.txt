@@ -1,0 +1,112 @@
+SPOTLIGHT - CONSTAT DES VULNERABILITES NPM
+Date du constat : 2026-10-03
+Branche analysee : codex/spotlight-v1
+Commit analyse : 8cc82ba
+
+OBJECTIF
+Ce fichier conserve le constat effectue localement afin que les futurs travaux,
+notamment dans Codex Cloud, ne corrigent pas automatiquement ces alertes sans
+verification de compatibilite.
+
+ETAT OBSERVE
+- Le message affiche par npm ci indiquait 14 vulnerabilites high.
+- Un npm audit relance ensuite a signale 25 paquets high : 20 dans l'arbre de
+  production et 5 dans l'outillage de developpement.
+- Il n'y avait aucune vulnerabilite critical.
+- Les 25 paquets signales correspondent principalement a la propagation de
+  quelques avis dans l'arbre de dependances. Ils ne representent pas 25 failles
+  independantes dans le code Spotlight.
+- Les bibliotheques racines concernees etaient : devalue, nanoid,
+  http-cache-semantics et braces.
+- Ce constat depend de la base d'avis npm et doit etre rafraichi avant toute
+  correction.
+
+1. DEVALUE 5.9.2, VIA WORKFLOW 5.0.1
+Avis observes : fuite potentielle de memoire pendant la serialisation de petits
+Buffer Node, amplification CPU ou memoire, tableaux creux, rejet asynchrone non
+gere et cas lie aux cles __proto__.
+
+Evaluation Spotlight : c'est le point prioritaire avant une production publique.
+Le code Spotlight transmet actuellement un identifiant de job a Workflow, et non
+des Buffer ou de gros objets arbitraires. Les creations de jobs passent par l'ERP
+protege. Cela reduit l'exposition constatee, sans garantir qu'elle est nulle car
+Workflow realise sa propre serialisation.
+
+Correction amont connue lors du constat : devalue 5.9.3.
+Ne pas forcer cette version sans tester Workflow, car @workflow/core verrouille
+actuellement devalue 5.9.2 exactement.
+
+2. NANOID 5.1.6, VIA @WORKFLOW/CORE
+Avis observes : boucle infinie avec une taille negative et debordement entier
+pouvant rendre des identifiants ulterieurs previsibles.
+
+Evaluation Spotlight : risque pratique faible dans l'usage actuel. Spotlight
+n'appelle pas directement ce nanoid imbrique et ne permet pas a un utilisateur de
+choisir la taille transmise au generateur.
+
+Corrections amont connues lors du constat : nanoid 5.1.11 pour le debordement et
+5.1.16 pour la boucle infinie.
+
+3. HTTP-CACHE-SEMANTICS 4.2.0
+Chaine observee : workflow -> @workflow/nest -> @swc/cli -> downloader -> got ->
+cacheable-request -> http-cache-semantics.
+
+Avis observe : une mauvaise gestion de max-stale peut divulguer une reponse en
+cache appartenant a un autre utilisateur.
+
+Evaluation Spotlight : cette occurrence appartient au telechargeur et a
+l'outillage SWC de Workflow. Elle ne semble pas servir de cache HTTP aux requetes
+de la boutique. Risque runtime Spotlight estime faible. Aucun correctif officiel
+n'etait declare dans l'avis consulte le 2026-10-03.
+
+4. BRACES 3.0.3, VIA ESLINT-CONFIG-NEXT
+Chaine observee : eslint-config-next -> @next/eslint-plugin-next -> fast-glob ->
+micromatch -> braces.
+
+Avis observe : un motif glob tres profond peut epuiser la pile Node et terminer
+le processus.
+
+Evaluation Spotlight : dependance utilisee pendant le lint, pas par la boutique
+en production. Risque runtime negligeable dans l'architecture actuelle.
+
+RISQUES D'UNE CORRECTION AUTOMATIQUE
+- Ne pas lancer npm audit fix --force sans analyse.
+- npm proposait notamment de retrograder workflow 5.0.1 vers 2.0.6 et
+  eslint-config-next 16.3.8 vers 14.2.35. Ces changements majeurs peuvent casser
+  Workflow, Next.js 16, la compilation ou les jobs durables.
+- Un override de devalue ou nanoid peut sembler compatible car il s'agit de
+  versions correctives, mais il contournerait les versions exactes validees par
+  Workflow.
+- Une mise a jour independante de got, cacheable-request ou de l'outillage SWC
+  peut casser la chaine de build de Workflow.
+- Ne jamais modifier node_modules manuellement : la modification ne serait pas
+  reproductible.
+
+STRATEGIE RECOMMANDEE
+1. Attendre de preference une version officielle de Workflow qui embarque
+   devalue >= 5.9.3 et nanoid >= 5.1.16.
+2. Travailler sur une branche isolee, sans deployer ni pousser automatiquement.
+3. Appliquer un seul changement de dependance a la fois.
+4. Apres chaque changement, executer : npm ci, npm run lint,
+   npm run typecheck, npm test, npm run build et npm run test:e2e.
+5. Tester specifiquement la creation, l'execution, l'echec, l'annulation et la
+   reprise des jobs Workflow, y compris avec une base contenant deja des jobs.
+6. Verifier dans l'artefact Vercel quelles dependances vulnerables sont reellement
+   incluses dans le runtime et lesquelles restent limitees au build.
+7. Relancer npm audit juste avant la decision : les avis et correctifs peuvent
+   avoir evolue depuis le 2026-10-03.
+
+REFERENCES DES AVIS PRINCIPAUX
+- devalue fuite memoire : GHSA-j22f-vq7h-c4qm
+- devalue amplification : GHSA-mcm9-63f2-9j32
+- devalue rejet asynchrone : GHSA-x5rw-q4pp-hg5g
+- nanoid taille negative : GHSA-28wg-ghj8-5hjv
+- nanoid debordement : GHSA-xwg4-73v4-xw9w
+- http-cache-semantics : GHSA-ch52-4w7c-c8xp
+- braces : GHSA-vfj7-8cjw-p6xm
+
+STATUT AU MOMENT DE LA REDACTION
+- Aucun correctif de dependance n'a ete applique.
+- Aucun npm audit fix ni npm audit fix --force n'a ete execute.
+- Le rapport est un constat de dependances, pas une preuve d'exploitation de
+  Spotlight.
