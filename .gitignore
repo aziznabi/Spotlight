@@ -1,0 +1,12 @@
+node_modules/
+.next/
+.vercel/
+.env*
+!.env.example
+.local/
+.workflow-data/
+test-results/
+playwright-report/
+*.tsbuildinfo
+coverage/
+/.swc

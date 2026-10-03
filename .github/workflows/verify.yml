@@ -1,0 +1,48 @@
+name: Verify Spotlight
+on:
+  pull_request:
+  push:
+    branches: ["codex/**"]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: spotlight
+          POSTGRES_PASSWORD: local-test-only
+          POSTGRES_DB: spotlight
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U spotlight"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://spotlight:local-test-only@127.0.0.1:5433/spotlight
+      DATABASE_ENV: development
+      APP_URL: http://localhost:3000
+      STORAGE_DRIVER: local
+      SESSION_COOKIE_SECURE: "false"
+      DEMO_SEED: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: npm
+      - run: npm ci
+      - run: npm run verify
+      - run: npm run db:migrate && npm run db:seed
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-verification
+          path: |
+            test-results/
+            .local/*.png
+          retention-days: 7

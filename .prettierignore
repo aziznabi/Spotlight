@@ -1,0 +1,6 @@
+src/app/.well-known/
+.next/
+.local/
+node_modules/
+package-lock.json
+migrations/
