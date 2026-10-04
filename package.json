@@ -32,6 +32,11 @@
     "workflow": "5.0.1",
     "zod": "4.6.5"
   },
+  "overrides": {
+    "@workflow/core@5.0.1": {
+      "devalue": "5.9.3"
+    }
+  },
   "devDependencies": {
     "@playwright/test": "1.63.0",
     "@types/node": "26.6.4",
