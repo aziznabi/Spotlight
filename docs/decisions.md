@@ -20,6 +20,10 @@ GitHub lecture OK. Neon MCP lecture/admin OK, branche dev créée. Shopify MCP r
 
 Aucun produit réel fourni et aucune clé de recherche/image. Jeux de tests synthétiques clairement marqués, jamais des preuves de marché. Mesures locales et preuves finales dans validation.md; aucun coût ou résultat fournisseur réel disponible.
 
+## Maintenance vérifiée le 4 octobre 2026
+
+Décision technique du 4 octobre : devalue 5.9.3 via override ciblé de Workflow 5.0.1, http-cache-semantics 4.3.0 dans sa plage existante et initialisation explicite des runs locaux. Nanoid reste bloqué par le risque de changement de rejeu des hooks; braces attend un correctif. Mesures, reproductions et risques résiduels dans [dependency-audit.md](dependency-audit.md). Ces choix ne valent pas validation commerciale ni audit exhaustif.
+
 ## Questions ouvertes
 
 Boutique cible, tokens applicatifs et domaines autorisés; coûts fournisseurs et modèle disponibles; premier administrateur; conditions de vente/livraison/retour, pays servis et fiscalité; validation du checkout test sur le plan Shopify. Aucun abonnement souscrit.

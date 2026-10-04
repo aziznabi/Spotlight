@@ -1,4 +1,4 @@
-# Matrice d’acceptation — 2 octobre 2026
+# Matrice d’acceptation — 4 octobre 2026
 
 « Vérifié local » ne signifie pas qu’une intégration externe fonctionne. Voir validation.md et deployment.md.
 
@@ -11,14 +11,15 @@
 | Studio documentaire | Upload, originaux immuables, fit/centrage/fond/ombre/formats, variantes, comparaison, validation/rejet/ordre/export et suppression logique | Vérifié avec fichiers synthétiques, Sharp et workflow durable local; suppression interdite si original, sélectionné, publié ou dépendant |
 | Détourage / scène IA | PhotoRoom isolé, capacités exposées, scènes marketing distinctes | Provisoire non validé; presets IA désactivés sans accès. Contrat fournisseur courant et essais à confirmer |
 | Stockage | Blob privé/public distinct, proxy authentifié | API typée; disque local vérifié. Blob externe non testé sans tokens |
-| Jobs | Workflow durable, concurrence, déduplication, délais, relance contrôlée | 1 workflow découvert; exécution complète sur serveur Next de production local. Vercel non vérifié |
+| Jobs | Workflow durable, concurrence, déduplication, délais, relance contrôlée | 1 workflow découvert; exécution et reprise après arrêt réel sur next start, annulation, retry, absence de doublon vérifiés. Vercel non vérifié |
 | Publication | Validation humaine, IDs, récupération réponse perdue, activation unique | Schéma officiel + contrat simulé testés; publication réelle bloquée |
 | Boutique / panier | Catalogue Spotlight, produit, panier privé, quantité 1, checkout Shopify | État public vide vérifié; contrats panier avec doubles. Catalogue réel/checkout test bloqués |
 | Commandes | HMAC brut, déduplication, engagement avant paiement, conflits/retards, aucun réassort aveugle | PostgreSQL + webhook synthétique signé; livraison Shopify réelle non testée |
 | Marketplaces | Listings à copier, URL/prix/statut déclaratifs, vente externe, retraits, confirmation d’expédition | Vérifié local; SKU/emplacement affichés; transporteur/suivi tracés; retrait Shopify réel bloqué; retraits externes manuels |
 | Reporting | Stock/tâches/commandes, ventes 30j, estimation après coûts connus | Données de base; inconnus explicites et tests exclus des résultats commerciaux; non comptabilité certifiée |
 | UI | Français, états vide/erreur/succès/chargement, focus, desktop/mobile | 10 E2E + inspection des captures; pas d’audit WCAG exhaustif |
-| Livraison | Versions/lockfile, migrations, seed, docs, CI | Lint/types/43 tests/build exécutés; première CI distante réussie, suite renforcée à revérifier sur PR; preview bloquée |
+| Livraison | Versions/lockfile, migrations, seed, docs, CI | Lint/types/50 tests/build et 10 E2E réussis localement; première CI distante antérieure réussie. Branche dépendances non poussée, CI de cette branche et preview non exécutées |
+| Dépendances | Correctifs compatibles et risques tracés | devalue/cache corrigés et testés. Audit encore à 18 paquets high (nanoid/braces); détails et limites dans dependency-audit.md |
 
 ## Bloqueurs du parcours commerce complet
 

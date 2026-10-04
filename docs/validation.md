@@ -1,4 +1,12 @@
-# Rapport de validation — 2 octobre 2026
+# Rapport de validation
+
+## Mise à jour du 4 octobre 2026 — dépendances et reprise locale
+
+Branche `codex/dependency-audit-refresh` : devalue 5.9.3 et http-cache-semantics 4.3.0 installés avec lockfile. Défaut de récupération locale des jobs au redémarrage corrigé. `npm ci`, migrations locales, lint, typage, **50 tests**, build et **10 E2E sur next start** réussis. Captures ordinateur/mobile inspectées. Test réel arrêt/redémarrage : même run, une seule variante, annulation sans exécution, retry contrôlé, 56 jobs préexistants conservés.
+
+Audit final : **18 paquets high, 0 critical**, provenant de nanoid et braces. Aucune preview déployée ni nouvelle validation d’API commerciale distante. Rapport reproductible, changements de la base d’avis et limites : [dependency-audit.md](dependency-audit.md). Les preuves distantes ci-dessous datent de la livraison précédente et ne valident pas automatiquement cette branche locale.
+
+## Livraison initiale du 2 octobre 2026
 
 ## Résultats exécutés
 

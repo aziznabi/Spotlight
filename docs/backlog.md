@@ -2,6 +2,8 @@
 
 ## Avant ouverture commerciale
 
+Traiter les alertes dépendances résiduelles : adoption amont de nanoid corrigé avec preuve de compatibilité des hooks persistés; correctif braces dès publication; retirer l’override devalue quand Workflow embarque sa correction. Inspecter l’artefact Vercel réel et actualiser npm audit. Planifier la migration d’ESLint hors de la version 9 désormais non supportée. État détaillé : [dependency-audit.md](dependency-audit.md).
+
 Configurer les accès de deployment.md et valider les critères externes de acceptance.md : preview Vercel, Blob privé/public, premier compte équipe, benchmark réel OpenAI, détourage et scène PhotoRoom (contrat courant à confirmer), publication et checkout Shopify test jusqu’au webhook/retrait. Confirmer boutique/canal, legal/shipping/taxes/retours et mode test sans souscription payante automatique. Comparer fournisseurs sur ~20 produits réels, mesurer coûts et latence, établir budgets.
 
 ## Compléments opérationnels V1
