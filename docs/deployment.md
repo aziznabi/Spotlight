@@ -1,6 +1,22 @@
 # Déploiement et connexions à terminer
 
-## Accès vérifiés le 2 octobre 2026
+## Configuration Preview — 4 octobre 2026
+
+Projet Vercel `spotlight` (`prj_PrXgWQhMQ6PzT9kAp2LozJSQbFPp`), relié au dépôt GitHub. La branche `codex/dependency-audit-refresh` dispose d’un alias stable : https://spotlight-git-codex-dependency-audit-refresh-aziznabis-projects.vercel.app . Utiliser cette URL pour les formulaires : elle est la valeur de `APP_URL` acceptée par la protection Origin. Les URL immuables des anciens déploiements ne récupèrent pas les nouvelles variables. Protection d’accès Vercel conservée.
+
+Variables configurées **uniquement pour Preview et cette branche Git** : `DATABASE_URL` et `CRON_SECRET` de type sensitive; `DATABASE_ENV=development`, `APP_URL`, `SESSION_COOKIE_SECURE=true`, `JOBS_MAX_CONCURRENCY=2`, `DEMO_SEED=false`. Aucun secret en Git ou dans la documentation, aucune variable Production modifiée. Le fichier local de démonstration n’a pas été remplacé.
+
+Neon confirmé par l’utilisateur : `dev-spotlight-v1` / `br-little-pine-b2rs2s22`, projet `aged-meadow-46817444`, base `neondb`. Connexion poolée et TLS `verify-full`. Rôle dédié `spotlight_runtime_preview`, sans superuser, création de base/rôle, bypass RLS ni appartenance à neon_superuser. Usage du schéma Spotlight, CRUD sur les tables métier, usage/lecture des séquences; aucun droit de modification des migrations ni création d’objets. Les nouvelles tables/séquences créées par neondb_owner dans ce schéma héritent des permissions applicatives. Le propriétaire peut prendre ce rôle pour vérifier les droits, sans en hériter automatiquement.
+
+Les checksums des migrations 001/002/003 ont été comparés au dépôt et correspondent. Les lectures sous le rôle applicatif ont réussi via Neon; aucun utilisateur, produit ou job n’existait à la configuration. Le premier compte administrateur reste à créer avec l’email choisi par l’utilisateur. Pas de seed cloud, pas de modification de Neon production.
+
+Le build exécute `scripts/verify-preview-db.ts` avant Next : uniquement sur Vercel Preview avec une DATABASE_URL configurée, contrôle de configuration puis transaction **en lecture seule** avec le pool applicatif réel et quatre tables du schéma. Un échec bloque le build sans exposer de secret. Ce contrôle valide la connexion depuis le build Vercel, pas une session ERP ou une exécution cron dans une fonction déployée.
+
+Cron : `/api/cron`, calendrier `0 5 * * *` (05:00 UTC), Bearer obligatoire et comparaison constante. **Vercel ne planifie les crons que sur Production**, pas sur Preview. Secret Preview prêt pour test manuel autorisé; aucun ordonnanceur payant ajouté ni promotion production. Il reste à vérifier l’appel authentifié en fonction déployée et les jobs distants. Le rapprochement Shopify reste désactivé tant que son token Admin manque.
+
+Le réseau de l’environnement Codex refuse actuellement le domaine preview (HTTP CONNECT 403); les tests HTTP authentifiés depuis ce poste restent bloqués. Les lectures via connecteurs ne prouvent pas à elles seules le fonctionnement de l’application : vérifier la preuve du build et l’état final de déploiement dans validation.md.
+
+## Accès initiaux vérifiés le 2 octobre 2026 (historique)
 
 - GitHub : dépôt `aziznabi/Spotlight`, lecture et branche de travail `codex/spotlight-v1`. Aucun push direct sur main.
 - Neon MCP : projet Spotlight `aged-meadow-46817444`; branche dev créée `br-little-pine-b2rs2s22` (`dev-spotlight-v1`), base neondb. Migrations 001, 002 et 003 appliquées et schéma lu sur **dev uniquement**. Aucune modification de production `br-withered-heart-b2wo6xy6`.
@@ -34,7 +50,7 @@ Ces lectures MCP ne donnent **aucun droit d’exécution à l’application dép
 2. Lier Neon dev et les stores Blob, renseigner les secrets **Preview** uniquement. Interdire le mélange de branche Neon production et preview. Vérifier quotas/prix Workflow/Blob avant activation.
 3. Autoriser dans le cloud les hôtes strictement nécessaires : host Neon dev, api.vercel.com si CLI, api.openai.com, sdk.photoroom.com, image-api.photoroom.com, boutique Shopify et domaines Blob pertinents. Le réseau de Vercel est distinct de celui du poste d’exécution.
 4. Appliquer `npm run db:migrate` à dev, pas `db push`; créer le premier administrateur. Le code Workflow utilise `withWorkflow`; Vercel fournit son infrastructure durable. Ne pas servir les routes `.well-known/workflow` via un proxy qui retire les signatures.
-5. Déployer une preview, fixer APP_URL à cette URL (ou domaine preview stable), redéployer si nécessaire. Vercel doit pouvoir délivrer ses jobs; vérifier les interactions avec Deployment Protection dans ce projet.
+5. Déployer une preview, fixer APP_URL à son **alias de branche stable**, redéployer si nécessaire et utiliser cet alias dans le navigateur. Vercel doit pouvoir délivrer ses jobs; vérifier les interactions avec Deployment Protection dans ce projet.
 6. Vérifier connexion privée, upload Blob privé (URL anonyme refusée), composition Studio, reprise durable, export et logs. Ajouter ensuite les clés payantes dans la limite de budget autorisée.
 
 ## Shopify : installation et essai complet
