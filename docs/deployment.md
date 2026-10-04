@@ -18,6 +18,8 @@ Cron : `/api/cron`, calendrier `0 5 * * *` (05:00 UTC), Bearer obligatoire et co
 
 Le réseau de l’environnement Codex refuse actuellement le domaine preview (HTTP CONNECT 403); les tests HTTP authentifiés depuis ce poste restent bloqués. Les lectures via connecteurs ne prouvent pas à elles seules le fonctionnement de l’application : vérifier la preuve du build et l’état final de déploiement dans validation.md.
 
+Résultat : déploiement `db10561` READY, contrôle de connexion/lecture réel réussi dans le build Vercel. `/connexion` répond 200; la fonction `/api/cron` refuse sans Bearer (401 dans les logs). Premier compte ERP, émission de son cookie et invocation cron authentifiée restent à vérifier séparément. Ne pas assimiler la présence des variables à un parcours commerce validé.
+
 ## Accès initiaux vérifiés le 2 octobre 2026 (historique)
 
 - GitHub : dépôt `aziznabi/Spotlight`, lecture et branche de travail `codex/spotlight-v1`. Aucun push direct sur main.

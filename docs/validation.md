@@ -1,5 +1,19 @@
 # Rapport de validation
 
+## Connexion Neon et configuration Preview — 4 octobre 2026
+
+Commit applicatif `db10561`, [déploiement Vercel READY](https://vercel.com/aziznabis-projects/spotlight/yDGUB96isBcr1cPtBxzj5S1L6hPZ). [URL stable à utiliser](https://spotlight-git-codex-dependency-audit-refresh-aziznabis-projects.vercel.app).
+
+- Sept variables relues via Vercel, uniquement Preview / `codex/dependency-audit-refresh`. `DATABASE_URL` et `CRON_SECRET` sont sensitive. Aucun secret affiché ni committé; aucune configuration Production modifiée.
+- Branche Neon `dev-spotlight-v1` confirmée; checksums des trois migrations identiques au dépôt. Rôle `spotlight_runtime_preview` sans privilèges de création, superuser ou bypass RLS; droits métier et lecture sous ce rôle vérifiés via Neon. Aucun utilisateur/produit/job créé sur cette branche.
+- **Connexion depuis Vercel réellement exécutée** par le contrôle de build : le même pool que l’application ouvre la connexion poolée et lit users/products/jobs/assets en transaction read-only. Message de réussite observé dans les logs Vercel. Un premier build avait été bloqué avec `08P01`; retrait du paramètre startup `options` pour le pooler, utilisation du search_path du rôle, puis réussite. Ce résultat est une preuve depuis le build, pas encore une connexion ERP authentifiée dans une fonction.
+- Lint, typage, **50 tests**, build et **10 E2E locaux sur next start** réussis après adaptation du pool. Contrôle pré-build essayé avec une vraie base locale; libellé de base production rejeté avant connexion.
+- `/connexion` : HTTP 200 réel via connecteur Vercel, formulaire présent, HSTS reçu. `/api/cron` sans Bearer : HTTP 401 confirmé dans les **logs de la fonction serverless** (le connecteur interprète ce refus comme une protection d’accès). Aucun traitement métier déclenché par ces appels.
+- `SESSION_COOKIE_SECURE=true`; code de session HttpOnly/Secure/SameSite=Lax conservé. Émission du cookie d’une session distante non vérifiée : aucun premier compte ERP n’existe encore. L’URL stable est l’Origin autorisée, pas les anciennes URL immuables.
+- Cron `0 5 * * *` préparé, secret configuré; **pas d’ordonnancement Preview par Vercel**. Appel authentifié et exécution distante des jobs restent à vérifier. Le shell Codex ne peut pas joindre la preview (restriction réseau HTTP CONNECT 403); le connecteur GET ne permet pas d’ajouter le Bearer du cron.
+
+Configuration et prochaines étapes dans [deployment.md](deployment.md). Shopify, Blob et fournisseurs IA n’ont pas été configurés dans cette intervention. Aucun abonnement ni passage en production.
+
 ## Mise à jour du 4 octobre 2026 — dépendances et reprise locale
 
 Branche `codex/dependency-audit-refresh` : devalue 5.9.3 et http-cache-semantics 4.3.0 installés avec lockfile. Défaut de récupération locale des jobs au redémarrage corrigé. `npm ci`, migrations locales, lint, typage, **50 tests**, build et **10 E2E sur next start** réussis. Captures ordinateur/mobile inspectées. Test réel arrêt/redémarrage : même run, une seule variante, annulation sans exécution, retry contrôlé, 56 jobs préexistants conservés.

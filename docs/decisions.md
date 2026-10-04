@@ -12,7 +12,7 @@ Sessions privées scrypt et tokens opaques en base, aucun formulaire d'inscripti
 
 OpenAI Responses + web search : premier candidat de recherche, connecteur isolé. PhotoRoom : candidat détourage; mise en scène via son API d'édition si clé appropriée. Choix provisoires faute de clés, aucun benchmark comparatif réel ni coût fictif. Les appels payants restent désactivés sans configuration.
 
-## Accès constatés
+## Accès initiaux constatés le 2 octobre
 
 GitHub lecture OK. Neon MCP lecture/admin OK, branche dev créée. Shopify MCP répond (boutique d'essai kaizjm-da.myshopify.com); cela ne fournit PAS un token applicatif. Vercel MCP liste l'équipe; aucun projet Spotlight initial. Aucun secret applicatif injecté. Réseau cloud limité aux gestionnaires de paquets, domaines APIs non autorisés. Le plan Neon refuse le réglage de suspension demandé; branche créée sans modifier ce réglage.
 
@@ -23,6 +23,8 @@ Aucun produit réel fourni et aucune clé de recherche/image. Jeux de tests synt
 ## Maintenance vérifiée le 4 octobre 2026
 
 Décision technique du 4 octobre : devalue 5.9.3 via override ciblé de Workflow 5.0.1, http-cache-semantics 4.3.0 dans sa plage existante et initialisation explicite des runs locaux. Nanoid reste bloqué par le risque de changement de rejeu des hooks; braces attend un correctif. Mesures, reproductions et risques résiduels dans [dependency-audit.md](dependency-audit.md). Ces choix ne valent pas validation commerciale ni audit exhaustif.
+
+Configuration cloud autorisée ensuite : branche Neon dev confirmée, rôle applicatif dédié, connexion poolée TLS, variables limitées à la branche Preview. APP_URL utilise l’alias Git stable; protection Vercel maintenue. Pas de cron planifié en Preview. Contrôle read-only de connexion au build pour ne pas livrer une preview configurée mais incapable de lire son schéma. Preuve de build Vercel et limites de vérification dans validation.md.
 
 ## Questions ouvertes
 
