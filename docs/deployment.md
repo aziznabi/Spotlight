@@ -10,6 +10,8 @@ Neon confirmé par l’utilisateur : `dev-spotlight-v1` / `br-little-pine-b2rs2s
 
 Les checksums des migrations 001/002/003 ont été comparés au dépôt et correspondent. Les lectures sous le rôle applicatif ont réussi via Neon; aucun utilisateur, produit ou job n’existait à la configuration. Le premier compte administrateur reste à créer avec l’email choisi par l’utilisateur. Pas de seed cloud, pas de modification de Neon production.
 
+Le rôle possède `search_path=spotlight,public`. Pour les hôtes Neon `-pooler`, le client n’envoie pas `options=-c search_path` au démarrage; il utilise ce défaut du rôle. Les connexions directes/locales conservent leur option explicite. Le contrôle Vercel vérifie la résolution des noms de tables non qualifiés pour détecter un rôle mal configuré.
+
 Le build exécute `scripts/verify-preview-db.ts` avant Next : uniquement sur Vercel Preview avec une DATABASE_URL configurée, contrôle de configuration puis transaction **en lecture seule** avec le pool applicatif réel et quatre tables du schéma. Un échec bloque le build sans exposer de secret. Ce contrôle valide la connexion depuis le build Vercel, pas une session ERP ou une exécution cron dans une fonction déployée.
 
 Cron : `/api/cron`, calendrier `0 5 * * *` (05:00 UTC), Bearer obligatoire et comparaison constante. **Vercel ne planifie les crons que sur Production**, pas sur Preview. Secret Preview prêt pour test manuel autorisé; aucun ordonnanceur payant ajouté ni promotion production. Il reste à vérifier l’appel authentifié en fonction déployée et les jobs distants. Le rapprochement Shopify reste désactivé tant que son token Admin manque.

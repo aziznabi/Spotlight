@@ -5,10 +5,15 @@ export function pool() {
     throw new Error(
       "DATABASE_URL manquant : configurez la branche Neon de développement.",
     );
+  const hostname = new URL(process.env.DATABASE_URL).hostname;
+  const neonPooler =
+    hostname.endsWith(".neon.tech") && hostname.includes("-pooler.");
   return (globalDb.spotlightPool ??= new Pool({
     connectionString: process.env.DATABASE_URL,
     max: 5,
-    options: "-c search_path=spotlight,public",
+    // PgBouncer rejects this startup parameter. The Neon runtime role has a
+    // persistent search_path; direct/local connections retain the explicit one.
+    ...(neonPooler ? {} : { options: "-c search_path=spotlight,public" }),
     connectionTimeoutMillis: 8000,
     idleTimeoutMillis: 10000,
   }));
