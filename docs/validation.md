@@ -1,5 +1,12 @@
 # Rapport de validation
 
+## Compte administrateur Preview — 6 octobre 2026
+
+- Compte privé administrateur créé dans Neon `dev-spotlight-v1` avec l'adresse fournie par le propriétaire. Exécution réelle de `npm run user:create` lors du déploiement Vercel `dpl_2MpgBshHiuoPPpLMorR5XC4Bv5Xe`, commit applicatif `398ef78`; message « Compte privé créé » observé dans les logs. Déploiement terminé, build de 60 s; contrôle de connexion Neon exécuté avant Next. Le script insère un hash scrypt salé et refuse un email déjà présent, sans remplacement de mot de passe.
+- Commande exceptionnelle de ce déploiement seulement : garde Vercel Preview, `DATABASE_ENV=development` et hostname Neon dev exact, création du compte, puis build habituel. Aucun changement du script de build dans le dépôt, aucune migration ou modification de production. Ne pas relancer cette commande de création : les déploiements suivants utilisent `npm run build`.
+- Mot de passe généré par `crypto.randomBytes(24)`, soit 32 caractères base64url. Stocké dans `ADMIN_PASSWORD`, type Vercel `encrypted`, limité à Preview / `codex/dependency-audit-refresh`; valeur relue et comparée en mémoire sans affichage ni fichier secret. Type récupérable choisi pour que le propriétaire puisse le transférer à son gestionnaire de mots de passe. `ADMIN_EMAIL` configuré sur le même périmètre. Retirer ces variables puis redéployer après récupération.
+- Le test réseau Codex retourne toujours CONNECT 403 avant de joindre Vercel. Aucun outil de modification de la politique réseau Codex n'est disponible dans cette session. Connexion ERP distante, cookie et cron authentifié restent **non vérifiés**; la création SQL ne valide pas ces parcours.
+
 ## Connexion Neon et configuration Preview — 4 octobre 2026
 
 Commit applicatif `db10561`, [déploiement Vercel READY](https://vercel.com/aziznabis-projects/spotlight/yDGUB96isBcr1cPtBxzj5S1L6hPZ). [URL stable à utiliser](https://spotlight-git-codex-dependency-audit-refresh-aziznabis-projects.vercel.app).

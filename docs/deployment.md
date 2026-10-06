@@ -1,5 +1,15 @@
 # Déploiement et connexions à terminer
 
+## Compte administrateur — 6 octobre 2026
+
+Le premier compte administrateur est créé dans Neon dev, avec l'adresse fournie par le propriétaire. La mention « reste à créer » dans l'état historique du 4 octobre ci-dessous est désormais résolue.
+
+Le mot de passe initial est temporairement conservé dans [Vercel / Spotlight / Environment Variables](https://vercel.com/aziznabis-projects/spotlight/settings/environment-variables), variable `ADMIN_PASSWORD`, Preview, branche `codex/dependency-audit-refresh`. Son type `encrypted` permet au propriétaire autorisé de révéler la valeur et de la sauvegarder dans son gestionnaire; `sensitive` ne permettrait pas cette récupération. Ne pas le coller dans une conversation, des logs ou Git. Après récupération, supprimer `ADMIN_PASSWORD` et `ADMIN_EMAIL`, puis redéployer pour les retirer des nouveaux runtimes. La connexion ERP utilise le hash en base, pas ces variables.
+
+Création effectuée une seule fois avec le script existant `npm run user:create`, via une commande spécifique au déploiement `dpl_2MpgBshHiuoPPpLMorR5XC4Bv5Xe`, gardée sur Preview et l'hôte Neon dev. Ne pas redéployer cette commande exceptionnelle : utiliser le build normal `npm run build` pour la suite. Aucun endpoint de provisioning ajouté, aucune inscription publique ouverte.
+
+La politique réseau du cloud Codex reste limitée aux gestionnaires de paquets. Ajouter `spotlight-git-codex-dependency-audit-refresh-aziznabis-projects.vercel.app` aux domaines autorisés dans les paramètres de cet environnement. L'outil Codex disponible peut lire cette politique mais ne peut pas la modifier. Conserver la protection Vercel; elle est distincte de cette restriction sortante. Session ERP et cron authentifié restent à tester depuis un environnement autorisé.
+
 ## Configuration Preview — 4 octobre 2026
 
 Projet Vercel `spotlight` (`prj_PrXgWQhMQ6PzT9kAp2LozJSQbFPp`), relié au dépôt GitHub. La branche `codex/dependency-audit-refresh` dispose d’un alias stable : https://spotlight-git-codex-dependency-audit-refresh-aziznabis-projects.vercel.app . Utiliser cette URL pour les formulaires : elle est la valeur de `APP_URL` acceptée par la protection Origin. Les URL immuables des anciens déploiements ne récupèrent pas les nouvelles variables. Protection d’accès Vercel conservée.

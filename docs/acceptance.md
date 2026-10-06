@@ -5,7 +5,7 @@
 | Parcours | Résultat | Preuve / état |
 | --- | --- | --- |
 | Auth | Sessions réelles, admin/opérateur, permissions serveur, Origin | PostgreSQL + E2E desktop/mobile |
-| SKU | Création/édition, SKU stable, revision, recherche/stock, coûts et taux d’achat | Vérifié local; migrations 001/002/003 sur Neon dev; connexion Vercel → Neon et lecture du schéma validées au build. Premier compte cloud absent |
+| SKU | Création/édition, SKU stable, revision, recherche/stock, coûts et taux d’achat | Vérifié local; migrations 001/002/003 sur Neon dev; connexion Vercel → Neon et lecture du schéma validées au build. Premier compte administrateur cloud créé le 6 octobre; connexion ERP distante à vérifier |
 | Pricing | Fingerprint, sources, déduplication, statistiques déterministes, séries séparées, cache/snapshots | Calculs testés; extraction OpenAI implémentée mais clé/réseau absents. Aucun benchmark réel |
 | IA produit | Propositions traçables, observations/déductions/inconnus, aucun certificat IA | Adaptateur implémenté, appel réel bloqué |
 | Studio documentaire | Upload, originaux immuables, fit/centrage/fond/ombre/formats, variantes, comparaison, validation/rejet/ordre/export et suppression logique | Vérifié avec fichiers synthétiques, Sharp et workflow durable local; suppression interdite si original, sélectionné, publié ou dépendant |
@@ -24,7 +24,7 @@
 
 ## Bloqueurs du parcours commerce complet
 
-Neon dev est configuré dans Vercel Preview et la lecture réelle depuis le build est validée. Restent les secrets Shopify/Blob/OpenAI/PhotoRoom, les droits réseau du poste de test, la confirmation boutique/canal, le premier compte cloud, les budgets API et le mode checkout test. Il faut encore vérifier les jobs en fonction déployée, mesurer un benchmark réel, un détourage et une scène fidèles, publier une pièce autorisée et passer une commande de test jusqu’au webhook/retrait. Aucune simulation ne remplace ces critères.
+Neon dev est configuré dans Vercel Preview et la lecture réelle depuis le build est validée. Restent les secrets Shopify/Blob/OpenAI/PhotoRoom, les droits réseau du poste de test, la confirmation boutique/canal, les budgets API et le mode checkout test. Il faut encore vérifier les jobs en fonction déployée, mesurer un benchmark réel, un détourage et une scène fidèles, publier une pièce autorisée et passer une commande de test jusqu’au webhook/retrait. Aucune simulation ne remplace ces critères.
 
 ## Périmètre fonctionnel encore incomplet
 
